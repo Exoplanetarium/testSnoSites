@@ -6,8 +6,8 @@
   <title>Right Rail</title>
   <style>
     :root{
-      --panel-width: 340px;
-      --handle-width: 48px;
+      --panel-width: 50px;
+      --handle-width: 300px;
       --radius: 16px;
       --shadow: 0 12px 40px rgba(0,0,0,.18);
       --bg: #ffffff;
@@ -35,7 +35,21 @@
       right: 0;
       transform: translateY(-50%);
       width: calc(var(--panel-width) + var(--handle-width));
+      height: 100vh;
       z-index: 999999;
+      border-radius: var(--radius) 0 0 var(--radius);
+    }
+
+    .dock::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, #ffffff, var(--accent));
+      border-radius: var(--radius) 0 0 var(--radius);
+      z-index: -1;
     }
 
     .wrap {
@@ -44,7 +58,7 @@
       transition: transform 320ms cubic-bezier(.2,.9,.2,1);
       display: flex;
       align-items: stretch;
-      filter: drop-shadow(var(--shadow));
+      height: 100vh;
     }
     .wrap.open { transform: translateX(0); }
 
@@ -52,51 +66,55 @@
       width: var(--handle-width);
       min-height: 140px;
       border-radius: var(--radius) 0 0 var(--radius);
-      background: var(--accent);
+      background: transparent;
       color: #fff;
       display: grid;
       place-items: center;
       cursor: pointer;
       user-select: none;
-      border: 1px solid rgba(255,255,255,.25);
+      border: none;
       position: relative;
+      height: 100vh;
+      transition: width 320ms cubic-bezier(.2,.9,.2,1);
     }
-    .handle:focus { outline: 3px solid rgba(37,99,235,.35); outline-offset: 2px; }
+    .handle:focus { outline: none; }
     .handle .label {
-      writing-mode: vertical-rl;
-      transform: rotate(180deg);
       letter-spacing: .06em;
       font-weight: 800;
       font-size: 12px;
     }
-    .handle .chev {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 18px;
-      height: 18px;
-      opacity: .95;
-      transition: transform 320ms cubic-bezier(.2,.9,.2,1);
+
+    .wrap.open .handle {
+      width: 0;
+      min-width: 0;
+      overflow: hidden;
+      border: none;
+      padding: 0;
     }
-    .wrap.open .handle .chev { transform: translateX(-50%) rotate(180deg); }
 
     .panel {
       width: var(--panel-width);
-      background: var(--bg);
+      background: linear-gradient(to left #ffffff, var(--accent));
       color: var(--text);
       border-radius: var(--radius) 0 0 var(--radius);
       border: 1px solid var(--border);
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      max-height: 72vh;
+      max-height: 100vh;
+      transition: width 320ms cubic-bezier(.2,.9,.2,1), background 320ms cubic-bezier(.2,.9,.2,1);
+    }
+
+    .wrap.open .panel {
+      width: calc(var(--panel-width) + var(--handle-width));
+      background: linear-gradient(to left #ffffff, var(--accent));
     }
 
     .header {
-      padding: 14px;
+      padding: 30px;
       border-bottom: 1px solid var(--border);
       display: flex;
+      flex-direction: row-reverse;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
@@ -106,20 +124,50 @@
       border: 1px solid var(--border);
       background: #fff;
       color: var(--text);
-      border-radius: 10px;
-      padding: 8px 10px;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      padding: 0;
       cursor: pointer;
-      font-weight: 800;
-      font-size: 12px;
+      font-size: 18px;
+      line-height: 1;
+      display: grid;
+      place-items: center;
     }
     .closeBtn:hover { background: rgba(15,23,42,.04); }
+
+    .toggleBtn {
+      position: absolute;
+      left: 0;
+      top: 10%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      border: 2px solid #fff;
+      cursor: pointer;
+      font-size: 18px;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+      z-index: 10;
+      transition: transform 320ms cubic-bezier(.2,.9,.2,1);
+    }
+    .toggleBtn:hover { transform: translate(-50%, -50%) scale(1.1); }
+    .toggleBtn:focus { outline: none; }
+    .toggleBtn .icon-open { display: block; }
+    .toggleBtn .icon-close { display: none; }
+    .toggleBtn.open .icon-open { display: none; }
+    .toggleBtn.open .icon-close { display: block; }
 
     .content { padding: 14px; overflow: auto; display: grid; gap: 10px; }
     .card {
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 12px;
-      background: rgba(15,23,42,.02);
+      background: rgb(255, 255, 255);
     }
     .card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
 
@@ -133,33 +181,38 @@
         100% { transform: translateX(calc(var(--panel-width))); }
       }
     }
+
+    @keyframes transparentTransition {
+      0% { background-color: rgba(255, 255, 255, 0); }
+      100% { background-color: rgba(255, 255, 255, 1); }
+    }
   </style>
 </head>
 <body>
   <div class="dock">
+    <button id="toggleBtn" class="toggleBtn" type="button" aria-label="Toggle sidebar">
+      <span class="icon-open">☰</span>
+      <span class="icon-close">✕</span>
+    </button>
     <div id="wrap" class="wrap pulse" role="complementary" aria-label="Sticky sidebar widget">
       <button id="handle" class="handle" type="button" aria-expanded="false" aria-controls="panel" title="Open sidebar">
-        <svg class="chev" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M9 6l6 6-6 6" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
-        </svg>
-        <div class="label">UPDATES</div>
+        <div class="label">OPEN</div>
       </button>
 
       <section id="panel" class="panel" aria-label="Sidebar panel">
         <div class="header">
-          <div class="title">Today’s Sidebar</div>
-          <button id="closeBtn" class="closeBtn" type="button">Close</button>
+          <div class="title">Today's Sidebar</div>
         </div>
 
         <div class="content">
           <div class="card">
             <p>
-              Put your text here. This whole widget runs inside the iframe.
+              Hi!!!!!!!!
             </p>
           </div>
           <div class="card">
             <p>
-              Use it for breaking updates, newsletter prompts, sponsor copy, or a call-to-action.
+              Some stuff that you want to say, plus a nice picture
             </p>
           </div>
         </div>
@@ -169,22 +222,26 @@
 
   <script>
     (function () {
+      var dock = document.querySelector(".dock");
       var wrap = document.getElementById("wrap");
       var handle = document.getElementById("handle");
-      var closeBtn = document.getElementById("closeBtn");
+      var toggleBtn = document.getElementById("toggleBtn");
+      var panel = document.getElementById("panel");
 
       function setOpen(isOpen) {
         wrap.classList.toggle("open", isOpen);
+        dock.classList.toggle("open", isOpen);
+        toggleBtn.classList.toggle("open", isOpen);
         handle.setAttribute("aria-expanded", String(isOpen));
-        handle.title = isOpen ? "Close sidebar" : "Open sidebar";
+        toggleBtn.setAttribute("aria-label", isOpen ? "Close sidebar" : "Open sidebar");
       }
 
       handle.addEventListener("click", function () {
         setOpen(!wrap.classList.contains("open"));
       });
 
-      closeBtn.addEventListener("click", function () {
-        setOpen(false);
+      toggleBtn.addEventListener("click", function () {
+        setOpen(!wrap.classList.contains("open"));
       });
 
       document.addEventListener("keydown", function (e) {
